@@ -89,9 +89,13 @@ Skipify removes the boring parts and delivers only what matters.
 
 ## 📸 Demo
 
-_Add screenshots here_
+> 🎬 See Skipify in action below
 
----
+<p align="center">
+  <a href="https://youtu.be/1Xw3FMMNkd8">
+    <img src="https://img.youtube.com/vi/1Xw3FMMNkd8/0.jpg" alt="Skipify Demo" />
+  </a>
+</p>
 
 ## 🤝 Contributing
 
