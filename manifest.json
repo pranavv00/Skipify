@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Skipify",
+  "version": "1.0",
+  "description": "Skip the boring. Play the best.",
+  "permissions": ["activeTab", "scripting"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["inject.js"],
+      "matches": ["https://www.youtube.com/*"]
+    }
+  ]
+}

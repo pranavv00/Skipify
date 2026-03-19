@@ -1,0 +1,16 @@
+.highlight-btn {
+  background: linear-gradient(45deg, #ff0000, #ff4d4d);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  margin-left: 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.highlight-btn:hover {
+  transform: scale(1.05);
+  background: linear-gradient(45deg, #cc0000, #ff1a1a);
+}
