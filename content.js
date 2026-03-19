@@ -3,8 +3,7 @@ if (window.skipifyLoaded) {
 } else {
   window.skipifyLoaded = true;
 
-  let currentTimeout = null;
-  let hasPlayed = false;
+  let currentInterval = null;
 
   function injectScript() {
     const script = document.createElement("script");
@@ -26,7 +25,8 @@ if (window.skipifyLoaded) {
   }
 
   function isEnabled() {
-    return localStorage.getItem("highlightEnabled") !== "false";
+    const val = localStorage.getItem("skipifyEnabled");
+    return val !== "false";
   }
 
   function addToggle() {
@@ -35,9 +35,13 @@ if (window.skipifyLoaded) {
     const toggle = document.createElement("button");
     toggle.id = "toggle-highlight";
 
-    toggle.innerText = isEnabled()
-      ? "🟢 Skipify ON"
-      : "🔴 Skipify OFF";
+    function updateText() {
+      toggle.innerText = isEnabled()
+        ? "🟢 Skipify ON"
+        : "🔴 Skipify OFF";
+    }
+
+    updateText();
 
     toggle.style.position = "fixed";
     toggle.style.top = "80px";
@@ -50,9 +54,9 @@ if (window.skipifyLoaded) {
     toggle.style.borderRadius = "10px";
 
     toggle.onclick = () => {
-      const current = isEnabled();
-      localStorage.setItem("highlightEnabled", (!current).toString());
-      location.reload();
+      const newVal = !isEnabled();
+      localStorage.setItem("skipifyEnabled", newVal.toString());
+      updateText();
     };
 
     document.body.appendChild(toggle);
@@ -60,36 +64,60 @@ if (window.skipifyLoaded) {
 
   function goToNextVideo() {
     console.log("➡️ Next video");
-
     const nextBtn = document.querySelector(".ytp-next-button");
     if (nextBtn) nextBtn.click();
   }
 
-  function playOnce(video, start, end) {
-    if (hasPlayed) return;
-    hasPlayed = true;
+  function playSegments(video, segments) {
+    let index = 0;
 
-    if (currentTimeout) clearTimeout(currentTimeout);
+    function playNext() {
+      if (index >= segments.length) {
+        goToNextVideo();
+        return;
+      }
 
-    video.currentTime = start;
+      let seg = segments[index];
 
-    video.play().catch(() => {
-      console.log("Autoplay blocked");
-    });
+      const CONTEXT = 12;
+      let start = Math.max(seg.start - CONTEXT, 0);
+      let end = seg.end;
 
-    const duration = end - start;
+      const minDuration = 60;
+      const videoDuration = video.duration;
 
-    console.log("🎧 Playing for", duration, "seconds");
+      if (end - start < minDuration) {
+        end = start + minDuration;
 
-    currentTimeout = setTimeout(() => {
-      goToNextVideo();
-    }, duration * 1000);
+        if (end > videoDuration) {
+          end = videoDuration - 1;
+          start = Math.max(end - minDuration, 0);
+        }
+      }
+
+      console.log("🎧 Playing segment", index + 1);
+
+      video.currentTime = start;
+      video.play().catch(() => {});
+
+      const target = start + (end - start);
+
+      if (currentInterval) clearInterval(currentInterval);
+
+      currentInterval = setInterval(() => {
+        if (video.currentTime >= target) {
+          clearInterval(currentInterval);
+          index++;
+          playNext();
+        }
+      }, 500);
+    }
+
+    playNext();
   }
 
   async function init() {
     console.log("🚀 Skipify running...");
-
-    hasPlayed = false;
 
     const video = await waitForVideo();
 
@@ -107,30 +135,13 @@ if (window.skipifyLoaded) {
 
     window.addEventListener("message", (event) => {
       if (event.data.type === "HIGHLIGHT_DATA") {
-        const segment = event.data.segment;
+        const segments = event.data.segments;
 
-        if (!segment) {
-          console.log("No segment");
-          return;
-        }
+        if (!segments || segments.length === 0) return;
 
-        const CONTEXT = 12;
-        let start = Math.max(segment.start - CONTEXT, 0);
-        let end = segment.end;
+        if (!isEnabled()) return;
 
-        const minDuration = 60;
-        const videoDuration = video.duration;
-
-        if (end - start < minDuration) {
-          end = start + minDuration;
-
-          if (end > videoDuration) {
-            end = videoDuration - 1;
-            start = Math.max(end - minDuration, 0);
-          }
-        }
-
-        playOnce(video, start, end);
+        playSegments(video, segments);
       }
     });
   }
@@ -142,7 +153,7 @@ if (window.skipifyLoaded) {
       lastUrl = location.href;
       console.log("🔄 New video");
 
-      if (currentTimeout) clearTimeout(currentTimeout);
+      if (currentInterval) clearInterval(currentInterval);
 
       setTimeout(() => {
         window.listenerAdded = false;

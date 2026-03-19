@@ -1,7 +1,7 @@
 (function () {
   console.log("🔥 Injected script running");
 
-  function getHeatmapSegment() {
+  function getHeatmapSegments() {
     try {
       const data = window.ytInitialPlayerResponse;
 
@@ -18,48 +18,45 @@
       const heatMarkers =
         heatmapObj.value.heatmap.heatmapRenderer.heatMarkers;
 
-      let max = 0;
-      let peak = 0;
+      // 🔥 Top 3 peaks
+      const sorted = [...heatMarkers]
+        .sort((a, b) =>
+          b.heatMarkerIntensityScoreNormalized -
+          a.heatMarkerIntensityScoreNormalized
+        )
+        .slice(0, 3);
 
-      heatMarkers.forEach(m => {
-        if (m.heatMarkerIntensityScoreNormalized > max) {
-          max = m.heatMarkerIntensityScoreNormalized;
-          peak = m.timeRangeStartMillis / 1000;
-        }
-      });
-
-      return {
-        start: peak,
-        end: peak + 10
-      };
+      return sorted.map(m => ({
+        start: m.timeRangeStartMillis / 1000,
+        end: m.timeRangeStartMillis / 1000 + 10
+      }));
     } catch {
       return null;
     }
   }
 
-  function getFallback() {
-    const video = document.querySelector("video");
-    if (!video) return null;
+  function fallback(video) {
+    const d = video.duration;
 
-    const peak = video.duration * 0.6;
-
-    return {
-      start: peak,
-      end: peak + 10
-    };
+    return [
+      { start: d * 0.5, end: d * 0.5 + 10 },
+      { start: d * 0.7, end: d * 0.7 + 10 }
+    ];
   }
 
   function sendData() {
-    let segment = getHeatmapSegment();
+    const video = document.querySelector("video");
 
-    if (!segment) {
-      console.log("No heatmap → fallback");
-      segment = getFallback();
+    let segments = getHeatmapSegments();
+
+    if (!segments) {
+      console.log("Fallback segments");
+      segments = fallback(video);
     }
 
     window.postMessage({
       type: "HIGHLIGHT_DATA",
-      segment
+      segments
     }, "*");
   }
 
