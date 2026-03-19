@@ -92,9 +92,13 @@ Skipify removes the boring parts and delivers only what matters.
 > 🎬 See Skipify in action below
 
 <p align="center">
-  <a href="https://youtu.be/1Xw3FMMNkd8">
-    <img src="https://img.youtube.com/vi/1Xw3FMMNkd8/0.jpg" alt="Skipify Demo" />
+  <a href="https://youtu.be/Cci3QJNp4ls">
+    <img src="https://img.youtube.com/vi/Cci3QJNp4ls/0.jpg" alt="Skipify Demo" />
   </a>
+</p>
+
+<p align="center">
+  <b>Skip boring parts. Watch only highlights.</b>
 </p>
 
 ## 🤝 Contributing
